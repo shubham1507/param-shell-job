@@ -40,15 +40,16 @@ pipeline {
       }
     }
 
-    stage('Deploy (Mock)') {
-      steps {
-        sh '''
-          set -e
-          ./scripts/deploy.sh ${DRY_RUN == 'true' ? '--dry-run' : ''}
-        '''
-      }
-    }
+  stage('Deploy (Mock)') {
+  steps {
+    // The script already consumes ENV, VERSION, DRY_RUN, CONFIRM via env vars
+    sh '''
+      set -e
+      ./scripts/deploy.sh
+    '''
   }
+}
+
 
   post {
     always {
