@@ -10,12 +10,12 @@ pipeline {
   parameters {
     choice(name: 'ENV', choices: ['dev', 'qa', 'prod'], description: 'Target environment')
     string(name: 'VERSION', defaultValue: '1.0.0', description: 'Artifact/app version')
-    booleanParam(name: 'DRY_RUN', defaultValue: false, description: 'Print actions only')
+    booleanParam(name: 'DRY_RUN', defaultValue: true, description: 'Print actions only')
     booleanParam(name: 'CONFIRM_PROD', defaultValue: false, description: 'Confirm production deploy')
   }
 
   environment {
-    // pass-through to scripts
+    // exported for the bash script
     ENVIRONMENT = "${params.ENV}"
     VERSION     = "${params.VERSION}"
     DRY_RUN     = "${params.DRY_RUN}"
@@ -40,16 +40,16 @@ pipeline {
       }
     }
 
-  stage('Deploy (Mock)') {
-  steps {
-    // The script already consumes ENV, VERSION, DRY_RUN, CONFIRM via env vars
-    sh '''
-      set -e
-      ./scripts/deploy.sh
-    '''
+    stage('Deploy (Mock)') {
+      steps {
+        // No Groovy interpolation inside the shell block; script reads env vars.
+        sh '''#!/usr/bin/env bash
+set -e
+./scripts/deploy.sh
+'''
+      }
+    }
   }
-}
-
 
   post {
     always {
@@ -57,11 +57,11 @@ pipeline {
     }
     success {
       echo '✅ Deployment OK'
-      // Example: send to Slack/email here
+      // add emailext/slackSend here if desired
     }
     failure {
       echo '❌ Deployment failed'
-      // Example: send to Slack/email here
+      // add emailext/slackSend here if desired
     }
   }
 }
